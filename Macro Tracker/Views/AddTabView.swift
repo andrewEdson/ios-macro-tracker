@@ -14,7 +14,9 @@ struct AddTabView: View {
     @State private var showBarcodeScanner = false
     @State private var showBarcodeConfirm = false
     @State private var showLookupError = false
+    @State private var showFoodSearch = false
     @State private var scannedProduct: BarcodeProduct?
+    @State private var scannerDismissed = false
 
     var body: some View {
         NavigationStack {
@@ -23,6 +25,11 @@ struct AddTabView: View {
                     showManualEntry = true
                 } label: {
                     Label("Add food manually", systemImage: "square.and.pencil")
+                }
+                Button {
+                    showFoodSearch = true
+                } label: {
+                    Label("Search food", systemImage: "magnifyingglass")
                 }
                 Button {
                     showBarcodeScanner = true
@@ -49,8 +56,17 @@ struct AddTabView: View {
             .sheet(isPresented: $showManualEntry) {
                 AddFoodView()
             }
-            .sheet(isPresented: $showBarcodeScanner) {
+            .sheet(isPresented: $showFoodSearch) {
+                FoodSearchView { product in
+                    scannedProduct = product
+                    showBarcodeConfirm = true
+                }
+            }
+            .sheet(isPresented: $showBarcodeScanner, onDismiss: {
+                scannerDismissed = true
+            }) {
                 BarcodeScannerView(onScan: { barcode in
+                    scannerDismissed = false
                     showBarcodeScanner = false
                     lookupBarcode(barcode)
                 })
@@ -77,6 +93,10 @@ struct AddTabView: View {
     private func lookupBarcode(_ barcode: String) {
         Task {
             let product = await barcodeAPIService.lookup(barcode: barcode, modelContext: modelContext)
+            // Wait for scanner sheet dismiss animation to finish
+            while !scannerDismissed {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
             if let product {
                 scannedProduct = product
                 showBarcodeConfirm = true

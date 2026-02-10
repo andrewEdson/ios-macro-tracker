@@ -56,6 +56,59 @@ final class BarcodeAPIService: ObservableObject {
         return product
     }
 
+    /// Search Open Food Facts by food name. Returns up to 25 results.
+    func searchFood(query: String) async -> [BarcodeProduct] {
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty,
+              let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "https://world.openfoodfacts.org/cgi/search.pl?search_terms=\(encoded)&search_simple=1&action=process&json=1&page_size=25") else {
+            return []
+        }
+
+        isLoading = true
+        errorMessage = nil
+
+        var request = URLRequest(url: url)
+        request.setValue("MacroTracker iOS App - github.com", forHTTPHeaderField: "User-Agent")
+
+        do {
+            let (data, _) = try await session.data(for: request)
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            guard let products = json?["products"] as? [[String: Any]] else {
+                isLoading = false
+                return []
+            }
+
+            let results: [BarcodeProduct] = products.compactMap { product in
+                let name = product["product_name"] as? String ?? ""
+                guard !name.isEmpty else { return nil }
+                let nutriments = product["nutriments"] as? [String: Any] ?? [:]
+                let carbs = nutrimentValue(nutriments, key: "carbohydrates_100g")
+                let protein = nutrimentValue(nutriments, key: "proteins_100g")
+                let fat = nutrimentValue(nutriments, key: "fat_100g")
+                let calories = nutrimentOptional(nutriments, key: "energy-kcal_100g")
+                let servingSize = product["serving_size"] as? String
+                let code = product["code"] as? String ?? ""
+                return BarcodeProduct(
+                    barcode: code,
+                    name: name,
+                    carbs: carbs,
+                    protein: protein,
+                    fat: fat,
+                    calories: calories,
+                    servingSize: servingSize
+                )
+            }
+
+            isLoading = false
+            return results
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+            return []
+        }
+    }
+
     // MARK: - Cache
 
     private func fetchCached(barcode: String, modelContext: ModelContext) -> BarcodeProduct? {

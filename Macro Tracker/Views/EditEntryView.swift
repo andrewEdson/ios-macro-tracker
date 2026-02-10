@@ -19,10 +19,16 @@ struct EditEntryView: View {
     @State private var carbsStr: String = ""
     @State private var proteinStr: String = ""
     @State private var fatStr: String = ""
-    @State private var caloriesStr: String = ""
     @State private var selectedMeal: MealType = .breakfast
     @State private var selectedDate: Date = Date()
     @State private var saved = false
+
+    private var calculatedCalories: Int {
+        let c = Double(carbsStr) ?? 0
+        let p = Double(proteinStr) ?? 0
+        let f = Double(fatStr) ?? 0
+        return Int((c * 4) + (p * 4) + (f * 9))
+    }
 
     var body: some View {
         NavigationStack {
@@ -32,7 +38,13 @@ struct EditEntryView: View {
                     macroRow(label: "Carbs (g)", text: $carbsStr)
                     macroRow(label: "Protein (g)", text: $proteinStr)
                     macroRow(label: "Fat (g)", text: $fatStr)
-                    macroRow(label: "Calories (optional)", text: $caloriesStr)
+                    HStack {
+                        Text("Calories")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("\(calculatedCalories) kcal")
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Section("When") {
@@ -86,7 +98,6 @@ struct EditEntryView: View {
         carbsStr = formatted(entry.carbs)
         proteinStr = formatted(entry.protein)
         fatStr = formatted(entry.fat)
-        caloriesStr = entry.calories.map { formatted($0) } ?? ""
         selectedMeal = entry.mealTypeEnum
         selectedDate = entry.date
     }
@@ -113,7 +124,7 @@ struct EditEntryView: View {
         entry.carbs = c
         entry.protein = p
         entry.fat = f
-        entry.calories = Double(caloriesStr.trimmingCharacters(in: .whitespaces)).flatMap { $0 >= 0 ? $0 : nil }
+        entry.calories = Double(calculatedCalories)
         entry.mealTypeEnum = selectedMeal
         entry.date = Calendar.current.startOfDay(for: selectedDate)
 

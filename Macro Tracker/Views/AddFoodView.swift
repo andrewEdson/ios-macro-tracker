@@ -16,13 +16,19 @@ struct AddFoodView: View {
     @State private var carbsStr = ""
     @State private var proteinStr = ""
     @State private var fatStr = ""
-    @State private var caloriesStr = ""
     @State private var selectedMeal: MealType = .breakfast
     @State private var selectedDate = Date()
     @State private var showBarcodeScanner = false
     @State private var saved = false
 
     private var userId: String? { authService.userId }
+
+    private var calculatedCalories: Int {
+        let c = Double(carbsStr) ?? 0
+        let p = Double(proteinStr) ?? 0
+        let f = Double(fatStr) ?? 0
+        return Int((c * 4) + (p * 4) + (f * 9))
+    }
 
     var body: some View {
         NavigationStack {
@@ -54,12 +60,11 @@ struct AddFoodView: View {
                             .frame(width: 70)
                     }
                     HStack {
-                        Text("Calories (optional)")
+                        Text("Calories")
+                            .foregroundColor(.secondary)
                         Spacer()
-                        TextField("—", text: $caloriesStr)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 70)
+                        Text("\(calculatedCalories) kcal")
+                            .foregroundColor(.secondary)
                     }
                 }
 
@@ -105,7 +110,7 @@ struct AddFoodView: View {
     private func saveEntry() {
         guard let uid = userId,
               let c = Double(carbsStr), let p = Double(proteinStr), let f = Double(fatStr) else { return }
-        let cal: Double? = Double(caloriesStr.trimmingCharacters(in: .whitespaces)).flatMap { $0 >= 0 ? $0 : nil }
+        let cal = Double(calculatedCalories)
         let date = Calendar.current.startOfDay(for: selectedDate)
 
         let entry = LogEntry(

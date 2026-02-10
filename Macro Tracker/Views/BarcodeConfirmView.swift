@@ -22,13 +22,19 @@ struct BarcodeConfirmView: View {
     @State private var carbsStr: String = ""
     @State private var proteinStr: String = ""
     @State private var fatStr: String = ""
-    @State private var caloriesStr: String = ""
     @State private var selectedMeal: MealType = .breakfast
     @State private var selectedDate = Date()
     @State private var servingGrams: String = "100"
     @State private var saved = false
 
     private var userId: String? { authService.userId }
+
+    private var calculatedCalories: Int {
+        let c = Double(carbsStr) ?? 0
+        let p = Double(proteinStr) ?? 0
+        let f = Double(fatStr) ?? 0
+        return Int((c * 4) + (p * 4) + (f * 9))
+    }
 
     // MARK: - Computed serving values
 
@@ -67,7 +73,13 @@ struct BarcodeConfirmView: View {
                     macroRow(label: "Carbs (g)", text: $carbsStr)
                     macroRow(label: "Protein (g)", text: $proteinStr)
                     macroRow(label: "Fat (g)", text: $fatStr)
-                    macroRow(label: "Calories (optional)", text: $caloriesStr)
+                    HStack {
+                        Text("Calories")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("\(calculatedCalories) kcal")
+                            .foregroundColor(.secondary)
+                    }
                 }
 
                 Section("When") {
@@ -128,11 +140,6 @@ struct BarcodeConfirmView: View {
         carbsStr = formatted(product.carbs * f)
         proteinStr = formatted(product.protein * f)
         fatStr = formatted(product.fat * f)
-        if let cal = product.calories {
-            caloriesStr = formatted(cal * f)
-        } else {
-            caloriesStr = ""
-        }
     }
 
     private func formatted(_ value: Double) -> String {
@@ -154,7 +161,7 @@ struct BarcodeConfirmView: View {
               let c = Double(carbsStr),
               let p = Double(proteinStr),
               let f = Double(fatStr) else { return }
-        let cal: Double? = Double(caloriesStr.trimmingCharacters(in: .whitespaces)).flatMap { $0 >= 0 ? $0 : nil }
+        let cal = Double(Int((c * 4) + (p * 4) + (f * 9)))
         let date = Calendar.current.startOfDay(for: selectedDate)
 
         let entry = LogEntry(

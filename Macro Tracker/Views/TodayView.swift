@@ -64,6 +64,7 @@ struct TodayView: View {
                             Text("No entries")
                                 .foregroundColor(.secondary)
                         } else {
+                            mealTotals(items)
                             ForEach(items, id: \.id) { entry in
                                 LogEntryRow(entry: entry)
                                     .contentShape(Rectangle())
@@ -93,6 +94,17 @@ struct TodayView: View {
                 EditEntryView(entry: entry)
             }
         }
+    }
+
+    private func mealTotals(_ items: [LogEntry]) -> some View {
+        let c = items.reduce(0) { $0 + $1.carbs }
+        let p = items.reduce(0) { $0 + $1.protein }
+        let f = items.reduce(0) { $0 + $1.fat }
+        let cal = items.reduce(0) { $0 + ($1.calories ?? ($1.carbs * 4 + $1.protein * 4 + $1.fat * 9)) }
+        return Text("C: \(Int(c))  P: \(Int(p))  F: \(Int(f))  \(Int(cal)) kcal")
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding(.vertical, 2)
     }
 
     private func deleteEntries(items: [LogEntry], at offsets: IndexSet) {
