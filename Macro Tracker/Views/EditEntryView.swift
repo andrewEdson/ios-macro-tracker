@@ -21,6 +21,8 @@ struct EditEntryView: View {
     @State private var fatStr: String = ""
     @State private var selectedMeal: MealType = .breakfast
     @State private var selectedDate: Date = Date()
+    @State private var servingSize: String = ""
+    @State private var servingUnit: ServingUnit = .grams
     @State private var saved = false
 
     private var calculatedCalories: Int {
@@ -35,6 +37,7 @@ struct EditEntryView: View {
             Form {
                 Section("Food") {
                     TextField("Name", text: $foodName)
+                    ServingSizeRow(servingSize: $servingSize, servingUnit: $servingUnit)
                     macroRow(label: "Carbs (g)", text: $carbsStr)
                     macroRow(label: "Protein (g)", text: $proteinStr)
                     macroRow(label: "Fat (g)", text: $fatStr)

@@ -19,6 +19,8 @@ struct AddFoodView: View {
     @State private var selectedMeal: MealType = .breakfast
     @State private var selectedDate = Date()
     @State private var showBarcodeScanner = false
+    @State private var servingSize: String = ""
+    @State private var servingUnit: ServingUnit = .grams
     @State private var saved = false
 
     private var userId: String? { authService.userId }
@@ -35,6 +37,7 @@ struct AddFoodView: View {
             Form {
                 Section("Food") {
                     TextField("Name", text: $foodName)
+                    ServingSizeRow(servingSize: $servingSize, servingUnit: $servingUnit)
                     HStack {
                         Text("Carbs (g)")
                         Spacer()

@@ -24,7 +24,9 @@ struct BarcodeConfirmView: View {
     @State private var fatStr: String = ""
     @State private var selectedMeal: MealType = .breakfast
     @State private var selectedDate = Date()
-    @State private var servingGrams: String = "100"
+    @State private var servingSize: String = "100"
+    @State private var servingUnit: ServingUnit = .grams
+    @State private var previousUnit: ServingUnit = .grams
     @State private var saved = false
 
     private var userId: String? { authService.userId }
@@ -40,8 +42,8 @@ struct BarcodeConfirmView: View {
 
     /// Factor to scale per-100g values to the entered serving size.
     private var servingFactor: Double {
-        guard let g = Double(servingGrams), g > 0 else { return 1 }
-        return g / 100.0
+        guard let value = Double(servingSize), value > 0 else { return 1 }
+        return servingUnit.toGrams(value) / 100.0
     }
 
     var body: some View {
@@ -50,17 +52,19 @@ struct BarcodeConfirmView: View {
                 Section("Product") {
                     TextField("Name", text: $foodName)
 
-                    HStack {
-                        Text("Serving size (g)")
-                        Spacer()
-                        TextField("100", text: $servingGrams)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 70)
-                            .onChange(of: servingGrams) { _ in
-                                recalculate()
+                    ServingSizeRow(servingSize: $servingSize, servingUnit: $servingUnit)
+                        .onChange(of: servingSize) { _ in
+                            recalculate()
+                        }
+                        .onChange(of: servingUnit) { _ in
+                            if let value = Double(servingSize), value > 0 {
+                                let grams = previousUnit.toGrams(value)
+                                let converted = servingUnit.fromGrams(grams)
+                                servingSize = formatted(converted)
                             }
-                    }
+                            previousUnit = servingUnit
+                            recalculate()
+                        }
 
                     if let info = product.servingSize {
                         Text("Label serving: \(info)")

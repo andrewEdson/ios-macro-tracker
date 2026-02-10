@@ -38,6 +38,8 @@
 		B7C0D58C2F3BCA5400999F6D /* EditEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C0D58A2F3BCA5400999F6D /* EditEntryView.swift */; };
 		B7C0D58E2F3BCA5400999F6D /* BarcodeConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C0D5892F3BCA5400999F6D /* BarcodeConfirmView.swift */; };
 		B7D1F5912F3BD00000999F6D /* FoodSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7D1F5902F3BD00000999F6D /* FoodSearchView.swift */; };
+		B7D1F5932F3BD10000999F6D /* ServingUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7D1F5922F3BD10000999F6D /* ServingUnit.swift */; };
+		B7D1F5952F3BD10000999F6D /* ServingSizeRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7D1F5942F3BD10000999F6D /* ServingSizeRow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -89,6 +91,8 @@
 		B7C0D5892F3BCA5400999F6D /* BarcodeConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeConfirmView.swift; sourceTree = "<group>"; };
 		B7C0D58A2F3BCA5400999F6D /* EditEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditEntryView.swift; sourceTree = "<group>"; };
 		B7D1F5902F3BD00000999F6D /* FoodSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodSearchView.swift; sourceTree = "<group>"; };
+		B7D1F5922F3BD10000999F6D /* ServingUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServingUnit.swift; sourceTree = "<group>"; };
+		B7D1F5942F3BD10000999F6D /* ServingSizeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServingSizeRow.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -197,6 +201,7 @@
 				B7C0D5892F3BCA5400999F6D /* BarcodeConfirmView.swift */,
 				B7C0D58A2F3BCA5400999F6D /* EditEntryView.swift */,
 				B7D1F5902F3BD00000999F6D /* FoodSearchView.swift */,
+				B7D1F5942F3BD10000999F6D /* ServingSizeRow.swift */,
 				B7A98A732F353E3A00A6A3E2 /* Auth */,
 				B7A98A872F353E3A00A6A3E2 /* AddFoodView.swift */,
 				B7A98A892F353E3A00A6A3E2 /* AddTabView.swift */,
@@ -225,6 +230,7 @@
 				B7A98A7C2F353E3A00A6A3E2 /* MacroGoals.swift */,
 				B7A98A7E2F353E3A00A6A3E2 /* LogEntry.swift */,
 				B7A98A802F353E3A00A6A3E2 /* CachedFood.swift */,
+				B7D1F5922F3BD10000999F6D /* ServingUnit.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -397,6 +403,8 @@
 				B7A98A8C2F353E3A00A6A3E2 /* BarcodeCameraView.swift in Sources */,
 				B7A98A8E2F353E3A00A6A3E2 /* BarcodeScannerViewController.swift in Sources */,
 				B7D1F5912F3BD00000999F6D /* FoodSearchView.swift in Sources */,
+				B7D1F5932F3BD10000999F6D /* ServingUnit.swift in Sources */,
+				B7D1F5952F3BD10000999F6D /* ServingSizeRow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
