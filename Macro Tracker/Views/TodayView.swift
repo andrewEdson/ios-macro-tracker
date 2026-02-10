@@ -38,6 +38,9 @@ struct TodayView: View {
     private var totalCarbs: Double { entriesForDay.reduce(0) { $0 + $1.carbs } }
     private var totalProtein: Double { entriesForDay.reduce(0) { $0 + $1.protein } }
     private var totalFat: Double { entriesForDay.reduce(0) { $0 + $1.fat } }
+    private var totalCalories: Double {
+        entriesForDay.reduce(0) { $0 + ($1.calories ?? ($1.carbs * 4 + $1.protein * 4 + $1.fat * 9)) }
+    }
 
     var body: some View {
         NavigationStack {
@@ -48,6 +51,7 @@ struct TodayView: View {
 
                 if let goals = goalsForUser() {
                     Section("Progress") {
+                        MacroProgressRow(label: "Calories", consumed: totalCalories, target: goals.calorieGoal, unit: "kcal")
                         MacroProgressRow(label: "Carbs", consumed: totalCarbs, target: goals.carbs)
                         MacroProgressRow(label: "Protein", consumed: totalProtein, target: goals.protein)
                         MacroProgressRow(label: "Fat", consumed: totalFat, target: goals.fat)
@@ -113,6 +117,7 @@ struct MacroProgressRow: View {
     let label: String
     let consumed: Double
     let target: Double
+    var unit: String = "g"
 
     private var remaining: Double { target - consumed }
     private var progress: Double {
@@ -125,13 +130,13 @@ struct MacroProgressRow: View {
             HStack {
                 Text(label)
                 Spacer()
-                Text("\(Int(consumed)) / \(Int(target)) g")
+                Text("\(Int(consumed)) / \(Int(target)) \(unit)")
                     .foregroundColor(.secondary)
             }
             ProgressView(value: progress)
                 .tint(progress > 1 ? .orange : .accentColor)
             if remaining != 0 {
-                Text(remaining > 0 ? "\(Int(remaining)) g remaining" : "\(Int(-remaining)) g over")
+                Text(remaining > 0 ? "\(Int(remaining)) \(unit) remaining" : "\(Int(-remaining)) \(unit) over")
                     .font(.caption)
                     .foregroundColor(remaining > 0 ? .secondary : .orange)
             }

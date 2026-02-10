@@ -47,6 +47,13 @@ struct GoalsView: View {
                             .multilineTextAlignment(.trailing)
                             .frame(width: 80)
                     }
+                    HStack {
+                        Text("Calories")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("\(Int(calculatedCalories)) kcal")
+                            .foregroundColor(.secondary)
+                    }
                 } header: {
                     Text("Daily macro targets")
                 }
@@ -62,13 +69,6 @@ struct GoalsView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    if syncService.isSyncing {
-                        HStack {
-                            ProgressView()
-                            Text("Syncing…")
-                                .foregroundColor(.secondary)
-                        }
-                    }
                 }
 
                 Section {
@@ -80,6 +80,13 @@ struct GoalsView: View {
             .navigationTitle("Goals")
             .onAppear { loadGoals() }
         }
+    }
+
+    private var calculatedCalories: Double {
+        let c = Double(carbs) ?? 0
+        let p = Double(protein) ?? 0
+        let f = Double(fat) ?? 0
+        return (c * 4) + (p * 4) + (f * 9)
     }
 
     private var isValidInput: Bool {
