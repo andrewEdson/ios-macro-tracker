@@ -56,12 +56,12 @@ final class BarcodeAPIService: ObservableObject {
         return product
     }
 
-    /// Search Open Food Facts by food name. Returns up to 25 results.
+    /// Search Open Food Facts by food name. Returns up to 20 results.
     func searchFood(query: String) async -> [BarcodeProduct] {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty,
               let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "https://world.openfoodfacts.org/cgi/search.pl?search_terms=\(encoded)&search_simple=1&action=process&json=1&page_size=25") else {
+              let url = URL(string: "https://world.openfoodfacts.org/cgi/search.pl?search_terms=\(encoded)&search_simple=1&action=process&json=1&page_size=20&fields=product_name,nutriments,serving_size,code&sort_by=unique_scans_n") else {
             return []
         }
 
@@ -100,8 +100,16 @@ final class BarcodeAPIService: ObservableObject {
                 )
             }
 
+            let lowerQuery = trimmed.lowercased()
+            let sorted = results.sorted { a, b in
+                let aMatches = a.name.lowercased().contains(lowerQuery)
+                let bMatches = b.name.lowercased().contains(lowerQuery)
+                if aMatches == bMatches { return false }
+                return aMatches && !bMatches
+            }
+
             isLoading = false
-            return results
+            return sorted
         } catch {
             errorMessage = error.localizedDescription
             isLoading = false
@@ -220,13 +228,21 @@ final class BarcodeAPIService: ObservableObject {
         var descriptor = serving[range.upperBound...]
             .trimmingCharacters(in: .whitespaces)
         
-        // Try to extract grams info from parentheses (e.g., "2 cookies (28g)")
+        // Try to extract grams/ml/fl oz info from parentheses (e.g., "2 cookies (28g)", "1 bottle (414 ml)")
         var gramsFromParens: Double?
-        let parensPattern = "\\(([0-9]*\\.?[0-9]+)\\s*g\\)"
-        if let parensRegex = try? NSRegularExpression(pattern: parensPattern),
+        let parensPattern = "\\(([0-9]*\\.?[0-9]+)\\s*(?:g|ml|fl\\s*oz)\\)"
+        if let parensRegex = try? NSRegularExpression(pattern: parensPattern, options: .caseInsensitive),
            let parensMatch = parensRegex.firstMatch(in: descriptor, range: NSRange(descriptor.startIndex..., in: descriptor)),
            let gramsRange = Range(parensMatch.range(at: 1), in: descriptor) {
-            gramsFromParens = Double(String(descriptor[gramsRange]))
+            // Determine which unit was matched to convert properly
+            let fullMatch = String(descriptor[Range(parensMatch.range, in: descriptor)!])
+            let lowerMatch = fullMatch.lowercased()
+            let rawValue = Double(String(descriptor[gramsRange])) ?? 0
+            if lowerMatch.contains("fl") || lowerMatch.contains("oz") {
+                gramsFromParens = rawValue * 29.5735  // fl oz to ml (≈ grams)
+            } else {
+                gramsFromParens = rawValue  // g or ml (≈ 1:1)
+            }
             // Remove the parenthetical part from descriptor
             descriptor = parensRegex.stringByReplacingMatches(
                 in: descriptor,

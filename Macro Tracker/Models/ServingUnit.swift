@@ -8,7 +8,7 @@ import Foundation
 /// Represents a serving unit for food items.
 /// For standard units (grams, ounces, cups), gramsPerUnit is a fixed conversion factor.
 /// For custom units (e.g., "cookies", "Oreos"), gramsPerUnit is the weight per single item.
-enum ServingUnit: Equatable, Identifiable {
+enum ServingUnit: Hashable, Identifiable {
     case grams
     case ounces
     case cups
