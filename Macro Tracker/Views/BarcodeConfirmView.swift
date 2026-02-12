@@ -27,6 +27,7 @@ struct BarcodeConfirmView: View {
     @State private var servingSize: String = "100"
     @State private var servingUnit: ServingUnit = .grams
     @State private var previousUnit: ServingUnit = .grams
+    @State private var availableUnits: [ServingUnit] = ServingUnit.standardUnits
     @State private var saved = false
 
     private var userId: String? { authService.userId }
@@ -52,7 +53,11 @@ struct BarcodeConfirmView: View {
                 Section("Product") {
                     TextField("Name", text: $foodName)
 
-                    ServingSizeRow(servingSize: $servingSize, servingUnit: $servingUnit)
+                    ServingSizeRow(
+                        servingSize: $servingSize,
+                        servingUnit: $servingUnit,
+                        availableUnits: availableUnits
+                    )
                         .onChange(of: servingSize) { _ in
                             recalculate()
                         }
@@ -136,6 +141,28 @@ struct BarcodeConfirmView: View {
 
     private func prefill() {
         foodName = product.name
+        
+        // Auto-detect and populate serving size from label
+        if let parsed = BarcodeAPIService.parseServingSize(product.servingSize) {
+            servingSize = formatted(parsed.value)
+            
+            // Create custom unit if descriptor is not a standard weight unit
+            if !BarcodeAPIService.isWeightUnit(parsed.descriptor) {
+                // Custom descriptor like "cookies", "crackers", etc.
+                // gramsPerServing is the total grams for the entire serving
+                // We need gramsPerUnit which is grams per single item
+                let gramsPerUnit = parsed.value > 0 ? parsed.gramsPerServing / parsed.value : parsed.gramsPerServing
+                let customUnit = ServingUnit.custom(label: parsed.descriptor, gramsPerUnit: gramsPerUnit)
+                servingUnit = customUnit
+                previousUnit = customUnit
+                availableUnits = ServingUnit.standardUnits + [customUnit]
+            } else {
+                // Standard weight unit - use grams
+                servingUnit = .grams
+                previousUnit = .grams
+            }
+        }
+        
         recalculate()
     }
 
