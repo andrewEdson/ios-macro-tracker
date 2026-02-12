@@ -10,26 +10,37 @@ struct AuthView: View {
     @State private var showingSignUp = false
 
     var body: some View {
-        Group {
-            if showingSignUp {
-                SignUpView(authService: authService)
-                    .overlay(alignment: .topLeading) {
-                        Button("Sign In") {
-                            showingSignUp = false
-                            authService.errorMessage = nil
-                        }
-                        .padding()
-                    }
-            } else {
-                SignInView(authService: authService)
-                    .overlay(alignment: .topLeading) {
-                        Button("Sign Up") {
-                            showingSignUp = true
-                            authService.errorMessage = nil
-                        }
-                        .padding()
-                    }
+        ZStack(alignment: .top) {
+            Group {
+                if showingSignUp {
+                    SignUpView(authService: authService)
+                } else {
+                    SignInView(authService: authService)
+                }
             }
+            
+            // Toggle button overlay
+            HStack {
+                Button {
+                    withAnimation(.spring(response: 0.3)) {
+                        showingSignUp.toggle()
+                        authService.errorMessage = nil
+                    }
+                } label: {
+                    Text(showingSignUp ? "Sign In" : "Sign Up")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.accentColor)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.accentColor.opacity(0.12))
+                        )
+                }
+                Spacer()
+            }
+            .padding()
+            .padding(.top, 8)
         }
     }
 }
