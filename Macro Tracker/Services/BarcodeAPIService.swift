@@ -123,7 +123,7 @@ final class BarcodeAPIService: ObservableObject {
             protein: cached.protein,
             fat: cached.fat,
             calories: cached.calories,
-            servingSize: nil
+            servingSize: cached.servingSize
         )
     }
 
@@ -134,7 +134,8 @@ final class BarcodeAPIService: ObservableObject {
             carbs: product.carbs,
             protein: product.protein,
             fat: product.fat,
-            calories: product.calories
+            calories: product.calories,
+            servingSize: product.servingSize
         )
         modelContext.insert(food)
         try? modelContext.save()
@@ -196,6 +197,62 @@ final class BarcodeAPIService: ObservableObject {
     }
 
     // MARK: - Helpers
+
+    /// Parse serving size string from API (e.g., "30 g", "2 cookies") into value and unit.
+    /// Returns (value, descriptor, gramsPerServing) tuple.
+    /// - For weight-based servings (g, oz), gramsPerServing is the total weight
+    /// - For item-based servings (cookies, crackers), gramsPerServing equals value (treated as grams)
+    static func parseServingSize(_ servingSize: String?) -> (value: Double, descriptor: String, gramsPerServing: Double)? {
+        guard let serving = servingSize?.trimmingCharacters(in: .whitespaces), !serving.isEmpty else {
+            return nil
+        }
+        
+        // Try to extract number from the beginning
+        let numberPattern = "^([0-9]*\\.?[0-9]+)"
+        guard let regex = try? NSRegularExpression(pattern: numberPattern),
+              let match = regex.firstMatch(in: serving, range: NSRange(serving.startIndex..., in: serving)),
+              let range = Range(match.range(at: 1), in: serving),
+              let value = Double(String(serving[range])) else {
+            return nil
+        }
+        
+        // Extract the rest as descriptor
+        var descriptor = serving[serving.index(range.upperBound, offsetBy: 0)...]
+            .trimmingCharacters(in: .whitespaces)
+        
+        // Try to extract grams info from parentheses (e.g., "2 cookies (28g)")
+        var gramsFromParens: Double? = nil
+        let parensPattern = "\\(([0-9]*\\.?[0-9]+)\\s*g\\)"
+        if let parensRegex = try? NSRegularExpression(pattern: parensPattern),
+           let parensMatch = parensRegex.firstMatch(in: descriptor, range: NSRange(descriptor.startIndex..., in: descriptor)),
+           let gramsRange = Range(parensMatch.range(at: 1), in: descriptor) {
+            gramsFromParens = Double(String(descriptor[gramsRange]))
+            // Remove the parenthetical part from descriptor
+            descriptor = parensRegex.stringByReplacingMatches(
+                in: descriptor,
+                range: NSRange(descriptor.startIndex..., in: descriptor),
+                withTemplate: ""
+            ).trimmingCharacters(in: .whitespaces)
+        }
+        
+        // Calculate grams per serving based on the descriptor
+        let gramsPerServing: Double
+        let lowerDescriptor = descriptor.lowercased()
+        
+        if lowerDescriptor == "g" || lowerDescriptor == "grams" || lowerDescriptor == "gram" {
+            gramsPerServing = value
+        } else if lowerDescriptor == "oz" || lowerDescriptor == "ounce" || lowerDescriptor == "ounces" {
+            gramsPerServing = value * 28.3495
+        } else if lowerDescriptor == "ml" || lowerDescriptor == "milliliter" || lowerDescriptor == "milliliters" {
+            gramsPerServing = value  // Approximate 1:1 for liquids
+        } else {
+            // For custom descriptors (cookies, crackers, etc.)
+            // If we found grams in parentheses, use that; otherwise use value as grams
+            gramsPerServing = gramsFromParens ?? value
+        }
+        
+        return (value, descriptor.isEmpty ? "g" : descriptor, gramsPerServing)
+    }
 
     /// Open Food Facts sometimes returns numbers as Int, Double, or String.
     private func nutrimentValue(_ dict: [String: Any], key: String) -> Double {

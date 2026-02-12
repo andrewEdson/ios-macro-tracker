@@ -15,6 +15,7 @@ final class CachedFood {
     var fat: Double
     var calories: Double?
     var cachedAt: Date
+    var servingSize: String?  // e.g., "30 g", "2 cookies"
 
     init(
         barcode: String,
@@ -23,7 +24,8 @@ final class CachedFood {
         protein: Double,
         fat: Double,
         calories: Double? = nil,
-        cachedAt: Date = Date()
+        cachedAt: Date = Date(),
+        servingSize: String? = nil
     ) {
         self.barcode = barcode
         self.foodName = foodName
@@ -32,5 +34,6 @@ final class CachedFood {
         self.fat = fat
         self.calories = calories
         self.cachedAt = cachedAt
+        self.servingSize = servingSize
     }
 }
