@@ -146,13 +146,13 @@ struct BarcodeConfirmView: View {
         if let parsed = BarcodeAPIService.parseServingSize(product.servingSize) {
             servingSize = formatted(parsed.value)
             
-            // Create custom unit if descriptor is not standard (g, oz, ml)
-            let lowerDescriptor = parsed.descriptor.lowercased()
-            if lowerDescriptor != "g" && lowerDescriptor != "grams" && lowerDescriptor != "gram" &&
-               lowerDescriptor != "oz" && lowerDescriptor != "ounce" && lowerDescriptor != "ounces" &&
-               lowerDescriptor != "ml" && lowerDescriptor != "milliliter" && lowerDescriptor != "milliliters" {
+            // Create custom unit if descriptor is not a standard weight unit
+            if !BarcodeAPIService.isWeightUnit(parsed.descriptor) {
                 // Custom descriptor like "cookies", "crackers", etc.
-                let customUnit = ServingUnit.custom(label: parsed.descriptor, gramsPerServing: parsed.gramsPerServing)
+                // gramsPerServing is the total grams for the entire serving
+                // We need gramsPerUnit which is grams per single item
+                let gramsPerUnit = parsed.value > 0 ? parsed.gramsPerServing / parsed.value : parsed.gramsPerServing
+                let customUnit = ServingUnit.custom(label: parsed.descriptor, gramsPerUnit: gramsPerUnit)
                 servingUnit = customUnit
                 previousUnit = customUnit
                 availableUnits = ServingUnit.standardUnits + [customUnit]

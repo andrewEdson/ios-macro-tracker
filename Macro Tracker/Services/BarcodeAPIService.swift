@@ -201,7 +201,7 @@ final class BarcodeAPIService: ObservableObject {
     /// Parse serving size string from API (e.g., "30 g", "2 cookies") into value and unit.
     /// Returns (value, descriptor, gramsPerServing) tuple.
     /// - For weight-based servings (g, oz), gramsPerServing is the total weight
-    /// - For item-based servings (cookies, crackers), gramsPerServing equals value (treated as grams)
+    /// - For item-based servings (cookies, crackers), gramsPerServing uses grams from parentheses if available, otherwise falls back to value
     static func parseServingSize(_ servingSize: String?) -> (value: Double, descriptor: String, gramsPerServing: Double)? {
         guard let serving = servingSize?.trimmingCharacters(in: .whitespaces), !serving.isEmpty else {
             return nil
@@ -217,11 +217,11 @@ final class BarcodeAPIService: ObservableObject {
         }
         
         // Extract the rest as descriptor
-        var descriptor = serving[serving.index(range.upperBound, offsetBy: 0)...]
+        var descriptor = serving[range.upperBound...]
             .trimmingCharacters(in: .whitespaces)
         
         // Try to extract grams info from parentheses (e.g., "2 cookies (28g)")
-        var gramsFromParens: Double? = nil
+        var gramsFromParens: Double?
         let parensPattern = "\\(([0-9]*\\.?[0-9]+)\\s*g\\)"
         if let parensRegex = try? NSRegularExpression(pattern: parensPattern),
            let parensMatch = parensRegex.firstMatch(in: descriptor, range: NSRange(descriptor.startIndex..., in: descriptor)),
@@ -237,14 +237,9 @@ final class BarcodeAPIService: ObservableObject {
         
         // Calculate grams per serving based on the descriptor
         let gramsPerServing: Double
-        let lowerDescriptor = descriptor.lowercased()
         
-        if lowerDescriptor == "g" || lowerDescriptor == "grams" || lowerDescriptor == "gram" {
-            gramsPerServing = value
-        } else if lowerDescriptor == "oz" || lowerDescriptor == "ounce" || lowerDescriptor == "ounces" {
-            gramsPerServing = value * 28.3495
-        } else if lowerDescriptor == "ml" || lowerDescriptor == "milliliter" || lowerDescriptor == "milliliters" {
-            gramsPerServing = value  // Approximate 1:1 for liquids
+        if isWeightUnit(descriptor) {
+            gramsPerServing = convertToGrams(value: value, unit: descriptor)
         } else {
             // For custom descriptors (cookies, crackers, etc.)
             // If we found grams in parentheses, use that; otherwise use value as grams
@@ -252,6 +247,27 @@ final class BarcodeAPIService: ObservableObject {
         }
         
         return (value, descriptor.isEmpty ? "g" : descriptor, gramsPerServing)
+    }
+    
+    /// Check if the descriptor is a standard weight unit (g, oz, ml)
+    static func isWeightUnit(_ descriptor: String) -> Bool {
+        let lowerDescriptor = descriptor.lowercased()
+        return lowerDescriptor == "g" || lowerDescriptor == "grams" || lowerDescriptor == "gram" ||
+               lowerDescriptor == "oz" || lowerDescriptor == "ounce" || lowerDescriptor == "ounces" ||
+               lowerDescriptor == "ml" || lowerDescriptor == "milliliter" || lowerDescriptor == "milliliters"
+    }
+    
+    /// Convert a value in the given unit to grams
+    private static func convertToGrams(value: Double, unit: String) -> Double {
+        let lowerUnit = unit.lowercased()
+        if lowerUnit == "g" || lowerUnit == "grams" || lowerUnit == "gram" {
+            return value
+        } else if lowerUnit == "oz" || lowerUnit == "ounce" || lowerUnit == "ounces" {
+            return value * 28.3495
+        } else if lowerUnit == "ml" || lowerUnit == "milliliter" || lowerUnit == "milliliters" {
+            return value  // Approximate 1:1 for liquids
+        }
+        return value
     }
 
     /// Open Food Facts sometimes returns numbers as Int, Double, or String.

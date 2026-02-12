@@ -5,11 +5,15 @@
 
 import Foundation
 
+/// Represents a serving unit for food items.
+/// For standard units (grams, ounces, cups), gramsPerUnit is a fixed conversion factor.
+/// For custom units (e.g., "cookies", "Oreos"), gramsPerUnit is the weight per single item.
 enum ServingUnit: Equatable, Identifiable {
     case grams
     case ounces
     case cups
-    case custom(label: String, gramsPerServing: Double)
+    /// Custom unit with label (e.g., "cookies") and weight per single unit in grams
+    case custom(label: String, gramsPerUnit: Double)
 
     var id: String {
         switch self {
@@ -34,7 +38,7 @@ enum ServingUnit: Equatable, Identifiable {
         case .grams:  return 1.0
         case .ounces: return 28.3495
         case .cups:   return 240.0
-        case .custom(_, let gramsPerServing): return gramsPerServing
+        case .custom(_, let gramsPerUnit): return gramsPerUnit
         }
     }
 
