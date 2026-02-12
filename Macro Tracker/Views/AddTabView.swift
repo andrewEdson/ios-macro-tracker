@@ -20,24 +20,65 @@ struct AddTabView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Button {
-                    showManualEntry = true
-                } label: {
-                    Label("Add food manually", systemImage: "square.and.pencil")
+            VStack(spacing: 0) {
+                // Hero section
+                VStack(spacing: 12) {
+                    Image(systemName: "fork.knife.circle.fill")
+                        .font(.system(size: 60))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.accentColor, .accentColor.opacity(0.7)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    Text("Log Your Food")
+                        .font(.system(size: 24, weight: .bold))
+                    Text("Choose how you'd like to add your meal")
+                        .font(.system(size: 15))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
                 }
-                Button {
-                    showFoodSearch = true
-                } label: {
-                    Label("Search food", systemImage: "magnifyingglass")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 32)
+                .background(Color.accentColor.opacity(0.08))
+                
+                // Action buttons
+                VStack(spacing: 16) {
+                    ActionButton(
+                        title: "Search food",
+                        subtitle: "Find nutrition info from database",
+                        icon: "magnifyingglass",
+                        color: .accentColor
+                    ) {
+                        showFoodSearch = true
+                    }
+                    
+                    ActionButton(
+                        title: "Scan barcode",
+                        subtitle: "Quick scan with your camera",
+                        icon: "barcode.viewfinder",
+                        color: Color("ProteinColor")
+                    ) {
+                        showBarcodeScanner = true
+                    }
+                    
+                    ActionButton(
+                        title: "Add manually",
+                        subtitle: "Enter nutrition details yourself",
+                        icon: "square.and.pencil",
+                        color: Color("CarbsColor")
+                    ) {
+                        showManualEntry = true
+                    }
                 }
-                Button {
-                    showBarcodeScanner = true
-                } label: {
-                    Label("Scan barcode", systemImage: "barcode.viewfinder")
-                }
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                
+                Spacer()
             }
             .navigationTitle("Add")
+            .navigationBarTitleDisplayMode(.inline)
             .overlay {
                 if barcodeAPIService.isLoading {
                     ZStack {
@@ -89,6 +130,52 @@ struct AddTabView: View {
             }
         }
     }
+
+struct ActionButton: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(color.opacity(0.15))
+                        .frame(width: 56, height: 56)
+                    Image(systemName: icon)
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(color)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.primary)
+                    Text(subtitle)
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
 
     private func lookupBarcode(_ barcode: String) {
         Task {
