@@ -21,66 +21,170 @@ struct GoalsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    HStack {
-                        Text("Carbs (g)")
-                        Spacer()
-                        TextField("0", text: $carbs)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                    }
-                    HStack {
-                        Text("Protein (g)")
-                        Spacer()
-                        TextField("0", text: $protein)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                    }
-                    HStack {
-                        Text("Fat (g)")
-                        Spacer()
-                        TextField("0", text: $fat)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                    }
-                    HStack {
-                        Text("Calories")
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Hero section
+                    VStack(spacing: 12) {
+                        Image(systemName: "target")
+                            .font(.system(size: 54))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.accentColor, Color("ProteinColor")],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        Text("Your Daily Goals")
+                            .font(.system(size: 24, weight: .bold))
+                        Text("Set your macro targets to fuel your fitness journey")
+                            .font(.system(size: 14))
                             .foregroundColor(.secondary)
-                        Spacer()
-                        Text("\(Int(calculatedCalories)) kcal")
-                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
                     }
-                } header: {
-                    Text("Daily macro targets")
-                }
-
-                Section {
-                    Button("Save goals") {
-                        saveGoals()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                    .background(Color.accentColor.opacity(0.08))
+                    
+                    VStack(spacing: 16) {
+                        MacroInputCard(
+                            label: "Carbs",
+                            icon: "leaf.fill",
+                            color: Color("CarbsColor"),
+                            value: $carbs
+                        )
+                        
+                        MacroInputCard(
+                            label: "Protein",
+                            icon: "bolt.fill",
+                            color: Color("ProteinColor"),
+                            value: $protein
+                        )
+                        
+                        MacroInputCard(
+                            label: "Fat",
+                            icon: "drop.fill",
+                            color: Color("FatColor"),
+                            value: $fat
+                        )
+                        
+                        // Calculated Calories
+                        HStack {
+                            Image(systemName: "flame.fill")
+                                .foregroundColor(Color("CaloriesColor"))
+                                .font(.system(size: 20, weight: .semibold))
+                            Text("Total Calories")
+                                .font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                            Text("\(Int(calculatedCalories)) kcal")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(Color("CaloriesColor"))
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color("CaloriesColor").opacity(0.1))
+                        )
+                    }
+                    .padding(.horizontal, 20)
+                    
+                    // Save button
+                    Button(action: saveGoals) {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 18))
+                            Text("Save Goals")
+                                .font(.system(size: 17, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            LinearGradient(
+                                colors: isValidInput ? [.accentColor, .accentColor.opacity(0.8)] : [Color.gray.opacity(0.3)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
                     }
                     .disabled(!isValidInput)
-
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    
                     if let msg = savedMessage {
-                        Text(msg)
-                            .foregroundColor(.secondary)
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.accentColor)
+                            Text(msg)
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.accentColor.opacity(0.1))
+                        )
+                        .padding(.horizontal, 20)
                     }
-
-                }
-
-                Section {
-                    Button("Sign out", role: .destructive) {
-                        try? authService.signOut()
+                    
+                    // Sign out button
+                    Button(action: { try? authService.signOut() }) {
+                        Text("Sign Out")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.red)
                     }
+                    .padding(.top, 8)
+                    .padding(.bottom, 32)
                 }
             }
             .navigationTitle("Goals")
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear { loadGoals() }
         }
     }
+
+struct MacroInputCard: View {
+    let label: String
+    let icon: String
+    let color: Color
+    @Binding var value: String
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 48, height: 48)
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(color)
+            }
+            
+            Text(label)
+                .font(.system(size: 16, weight: .semibold))
+            
+            Spacer()
+            
+            TextField("0", text: value)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .font(.system(size: 18, weight: .semibold))
+                .frame(width: 80)
+            
+            Text("g")
+                .font(.system(size: 15))
+                .foregroundColor(.secondary)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+        )
+    }
+}
 
     private var calculatedCalories: Double {
         let c = Double(carbs) ?? 0

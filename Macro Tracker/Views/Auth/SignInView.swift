@@ -15,38 +15,60 @@ struct SignInView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                Text("Sign In")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+            VStack(spacing: 32) {
+                // Hero section with fitness icon
+                VStack(spacing: 16) {
+                    Image(systemName: "figure.run.circle.fill")
+                        .font(.system(size: 80))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.accentColor, Color("ProteinColor")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    Text("Macro Tracker")
+                        .font(.system(size: 32, weight: .bold))
+                    Text("Track your nutrition, fuel your fitness")
+                        .font(.system(size: 15))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 40)
 
                 if let message = authService.errorMessage {
                     Text(message)
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundColor(.red)
-                        .multilineTextAlignment(.center)
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.red.opacity(0.1))
+                        )
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Email")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    TextField("Email", text: $email)
-                        .textFieldStyle(.roundedBorder)
-                        .textContentType(.emailAddress)
-                        .autocapitalization(.none)
-                        .keyboardType(.emailAddress)
-                        .focused($focusedField, equals: .email)
-                }
+                VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Email")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        TextField("your.email@example.com", text: $email)
+                            .textFieldStyle(.roundedBorder)
+                            .textContentType(.emailAddress)
+                            .autocapitalization(.none)
+                            .keyboardType(.emailAddress)
+                            .focused($focusedField, equals: .email)
+                    }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Password")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    SecureField("Password", text: $password)
-                        .textFieldStyle(.roundedBorder)
-                        .textContentType(.password)
-                        .focused($focusedField, equals: .password)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Password")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        SecureField("Enter your password", text: $password)
+                            .textFieldStyle(.roundedBorder)
+                            .textContentType(.password)
+                            .focused($focusedField, equals: .password)
+                    }
                 }
 
                 Button {
@@ -58,22 +80,30 @@ struct SignInView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .frame(maxWidth: .infinity)
+                            .frame(height: 50)
                     } else {
-                        Text("Sign In")
-                            .frame(maxWidth: .infinity)
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.system(size: 18))
+                            Text("Sign In")
+                                .font(.system(size: 17, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .background(
+                    LinearGradient(
+                        colors: (authService.isLoading || email.isEmpty || password.isEmpty) ? [Color.gray.opacity(0.3)] : [.accentColor, .accentColor.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .foregroundColor(.white)
+                .cornerRadius(16)
                 .disabled(authService.isLoading || email.isEmpty || password.isEmpty)
-
-                if let _ = authService.errorMessage {
-                    Button("Clear error") {
-                        authService.errorMessage = nil
-                    }
-                    .font(.caption)
-                }
             }
-            .padding(24)
+            .padding(.horizontal, 24)
         }
     }
 }

@@ -39,17 +39,18 @@ struct MainTabView: View {
         TabView {
             TodayView()
                 .tabItem {
-                    Label("Today", systemImage: "calendar")
+                    Label("Today", systemImage: "chart.bar.fill")
                 }
             AddTabView()
                 .tabItem {
-                    Label("Add", systemImage: "plus.circle")
+                    Label("Add", systemImage: "plus.circle.fill")
                 }
             GoalsView()
                 .tabItem {
                     Label("Goals", systemImage: "target")
                 }
         }
+        .tint(.accentColor)
     }
 }
 
